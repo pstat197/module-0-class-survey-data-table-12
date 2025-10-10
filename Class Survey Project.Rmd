@@ -1,0 +1,11 @@
+---
+title: "Class Survey Project"
+author: "All Members of Table 12"
+date: "2025-10-09"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+

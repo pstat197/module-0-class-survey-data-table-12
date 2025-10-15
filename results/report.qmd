@@ -84,11 +84,7 @@ summary(df[, c("Math_Proficiency", "Prog_Proficiency", "Stat_Proficiency")])
 
 ### Question 3
 
-Computing had a minimal or near-flat relationship, indicating that previous course preparation in this sample was mostly statistics-driven.
-
-Mathematics displayed a weaker but still positive trend, suggesting some shared foundation between math background and self-perceived ability.
-
-Statistics proficiency showed the strongest positive correlation with CPS; students who had taken more or harder statistics courses tended to report higher confidence and skill.
+We've plotted the regression plots and derived the regression models for each proficiency of interest in relation to the average score, specifically on programming, statistics, and math proficiency.
 
 ```{r}
 df <- df %>%
@@ -165,6 +161,12 @@ plots[[1]]
 plots[[2]]
 plots[[3]]
 ```
+
+Programming (Computing) had a minimal positive or near-flat relationship to the average score, indicating that previous course preparation in this sample was mostly statistics-driven. Namely, according to the regression plot, although students with higher average scores tend to have slightly better programming proficiency, it is hard to derive a solid conclusion that they have a positive relationship due to the data's perceived nature of statistics.
+
+Statistics proficiency shows a very strong positive correlation with the average score. Namely, students who took more or harder statistics courses tend to report higher confidence and proficiency in statistics skills. This aligns with the realistic expectation that the more statistics courses a student took the more confident the student should be in a statistics program.
+
+Mathematics displayed a weaker but still positive trend, suggesting some shared foundation between math background and self-perceived ability.
 
 ```{r}
 # Build regression models

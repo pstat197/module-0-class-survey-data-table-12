@@ -1,7 +1,9 @@
 ---
-title: "Analysis of class surveys"
+title: "Students' Preparedness in Capstone: A Regression Analysis on the Class Survey"
 subtitle: "If you want a subtitle put it here"
-author: "Jasper Luo"
+author: 
+  - Jasper Luo
+  - Jimmy Wu
 date: last-modified
 published-title: "Updated"
 editor: visual
@@ -56,6 +58,7 @@ $$
 where $N_i$ is the set of courses they’ve taken. We then ranked students by CPS to compare preparation levels.
 
 ```{r,warning=FALSE}
+# setwd will work only at the working environment of the person who wrote this
 setwd("D:/UCSB/Class/F25/PSTAT197A/module-0-class-survey-data-table-12/data")
 csv_path <- "PSTAT197A_ Standardized_Proficiency_Score.csv"
 df <- read_csv(csv_path, show_col_types = FALSE)

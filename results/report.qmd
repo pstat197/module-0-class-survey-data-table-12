@@ -1,7 +1,7 @@
 ---
 title: "Analysis of class surveys"
 subtitle: "If you want a subtitle put it here"
-author: "List names here"
+author: "Jasper Luo"
 date: last-modified
 published-title: "Updated"
 editor: visual
@@ -39,27 +39,185 @@ Write a brief description of the dataset. Your description should cover how data
 >
 > 1.  *How can we quantify and rank each student’s ability/preparedness from prior coursework?*
 >
->     We created a weighted course difficulty index (1 = easy, 2 = intermediate, 3 = hard) and averaged the five group member’s scores to get a consensus weight $W_C$ for each course. For student $i$, we computed a normalized Course Preparation Score (CPS).
->
->     $\mathrm{CPS}_i = \frac{1}{\lvert N_i\rvert}\sum_{c \in N_i} w_c$
->
->     where $N_i$ is the set of courses they’ve taken. We then ranked students by CPS to compare preparation levels.
->
 > 2.  *Is coursework preparation associated with domain-specific self-assessed ability?*
 >
 > 3.  *Which domain—Statistics, Mathematics, or Computing—shows the strongest association with preparation?*
 
 ## Findings
 
-```{r}
-proficiency <- read_csv("../data/PSTAT197A_ Standardized_Proficiency_Score.csv")
+### Question 1
+
+We created a weighted course difficulty index (1 = easy, 2 = intermediate, 3 = hard) and averaged the five group member’s scores to get a consensus weight $W_C$ for each course. For student $i$, we computed a normalized Course Preparation Score (CPS).
+
+$$
+\mathrm{CPS}_i = \frac{1}{\lvert N_i \rvert}\sum_{c \in N_i} w_c
+$$
+
+where $N_i$ is the set of courses they’ve taken. We then ranked students by CPS to compare preparation levels.
+
+```{r,warning=FALSE}
+setwd("D:/UCSB/Class/F25/PSTAT197A/module-0-class-survey-data-table-12/data")
+csv_path <- "PSTAT197A_ Standardized_Proficiency_Score.csv"
+df <- read_csv(csv_path, show_col_types = FALSE)
+
+# Basic summaries
+summary(df$Score_Avg)
 ```
 
-Summarize your results. Don't try to explain every step you took; focus instead on providing the main data analytic outputs -- tables and figures -- and explaining clearly what they show. Clarify any important decisions you made in obtaining them. You can display codes if you like but it is not necessary.
+### Question 2
 
-## Useful tips (remove this section)
+We tested whether students with higher coursework preparation (CPS) also rated themselves higher in Statistics, Mathematics, or Computing proficiency.\
+Each domain’s proficiency index was computed as:
 
-Due to the visual editor, most common needs for authoring can be met using menu items in the RStudio IDE. For a comprehensive guide to Quarto, see the [documentation](https://quarto.org/docs/guide/); consult the documentation for anything you can't sort out in the IDE.
+$$
+\text{Proficiency Score} = (\text{Confidence Level}) \times (\text{Level Weight})
+$$
+
+where Level Weight = 1 for Beginner, 1.5 for Intermediate, and 2 for Advanced.
+
+```{r}
+summary(df[, c("Math_Proficiency", "Prog_Proficiency", "Stat_Proficiency")])
+```
+
+### Question 3
+
+Computing had a minimal or near-flat relationship, indicating that previous course preparation in this sample was mostly statistics-driven.
+
+Mathematics displayed a weaker but still positive trend, suggesting some shared foundation between math background and self-perceived ability.
+
+Statistics proficiency showed the strongest positive correlation with CPS; students who had taken more or harder statistics courses tended to report higher confidence and skill.
+
+```{r}
+df <- df %>%
+  mutate(
+    Score_Avg        = as.numeric(Score_Avg),
+    Prog_Proficiency = as.numeric(Prog_Proficiency),
+    Stat_Proficiency = as.numeric(Stat_Proficiency),
+    Math_Proficiency = as.numeric(Math_Proficiency)
+  ) 
+
+# define pairs and fit models
+pairs <- tribble(
+  ~y,                  ~x,
+  "Prog_Proficiency",  "Score_Avg",
+  "Stat_Proficiency",  "Score_Avg",
+  "Math_Proficiency",  "Score_Avg"
+)
+
+fit_1 <- function(y, x, data) {
+  sub <- data %>% select(all_of(c(y, x))) %>% drop_na()
+  m   <- lm(reformulate(x, y), data = sub)
+  list(
+    glance = glance(m) %>% mutate(y = y, x = x, n = nobs(m)),
+    tidy   = tidy(m)   %>% mutate(y = y, x = x),
+    model  = m,
+    data   = sub
+  )
+}
+
+fits <- pairs %>%
+  pmap(fit_1, data = df)
+```
+
+```{r}
+plot_one <- function(y, x, data) {
+  rngx <- range(data[[x]], na.rm = TRUE) + c(-0.05, 0.05)
+  rngy <- range(data[[y]], na.rm = TRUE) + c(-0.5, 0.5)
+  
+  ggplot(data, aes(x = .data[[x]], y = .data[[y]])) +
+    geom_point(
+      alpha = 0.7,
+      size = 2,
+      color = "#2C7FB8",
+      position = position_jitter(width = 0.01, height = 0.01)
+    ) +
+    geom_smooth(
+      method = "lm",
+      se = TRUE,
+      color = "#D95F0E",
+      fill = "#FEE0B6" 
+    ) +
+    coord_cartesian(xlim = rngx, ylim = rngy) +
+    labs(
+      title = paste(y, "vs", x),
+      x = x,
+      y = y
+    ) +
+    theme_minimal(base_size = 12) +
+    theme(
+      plot.title = element_text(face = "bold", hjust = 0.5),
+      panel.grid.minor = element_blank(),
+      panel.grid.major = element_line(color = "grey90")
+    )
+}
+
+plots <- pmap(
+  pairs,
+  \(y, x) plot_one(y, x, df %>% select(all_of(c(y, x))) %>% drop_na())
+)
+```
+
+```{r}
+plots[[1]]
+plots[[2]]
+plots[[3]]
+```
+
+```{r}
+# Build regression models
+model_math <- lm(Math_Proficiency ~ Score_Avg, data = df)
+model_prog <- lm(Prog_Proficiency ~ Score_Avg, data = df)
+model_stat <- lm(Stat_Proficiency ~ Score_Avg, data = df)
+
+# Extract R²
+r2_values <- data.frame(
+  Skill = c("Math", "Programming", "Statistics"),
+  R2 = c(summary(model_math)$r.squared,
+         summary(model_prog)$r.squared,
+         summary(model_stat)$r.squared)
+)
+
+# Bar chart
+ggplot(r2_values, aes(x = Skill, y = R2)) +
+  geom_col(fill = "steelblue") +
+  geom_text(aes(label = round(R2, 2)), vjust = -0.5) +
+  labs(title = "R²: How Much Score_Avg Explains Each Skill",
+       x = NULL, y = "R² Value") +
+  ylim(0, 1) +
+  theme_minimal()
+```
+
+```{r}
+model_math <- lm(Math_Proficiency ~ Score_Avg, data = df)
+model_prog <- lm(Prog_Proficiency ~ Score_Avg, data = df)
+model_stat <- lm(Stat_Proficiency ~ Score_Avg, data = df)
+
+# Extract coefficients and standard errors
+coef_data <- tibble(
+  Skill = c("Math", "Programming", "Statistics"),
+  Coef = c(coef(model_math)[2], coef(model_prog)[2], coef(model_stat)[2]),
+  SE = c(tidy(model_math)$std.error[2],
+         tidy(model_prog)$std.error[2],
+         tidy(model_stat)$std.error[2])
+)
+
+# Plot with error bars
+ggplot(coef_data, aes(x = Skill, y = Coef)) +
+  geom_col(fill = "darkorange") +
+  geom_errorbar(aes(ymin = Coef - 1.96 * SE, ymax = Coef + 1.96 * SE), width = 0.2) +
+  labs(
+    title = "Effect of Score_Avg on Each Skill (with 95% CI)",
+    y = "Regression Coefficient (Slope)",
+    x = NULL
+  ) +
+  theme_minimal()
+
+# Check residuals for statistics model
+par(mfrow = c(2,2))
+plot(model_stat)
+```
+
+Overall, students with stronger coursework backgrounds—especially in statistics—felt more capable and confident in their technical skills. This suggests that prior coursework preparation does contribute to perceived proficiency, though the strength of association varies by domain.
 
 ### Code chunks
 
@@ -67,13 +225,13 @@ Insert code chunks using the *Insert* drop-down menu or `ctrl + alt + I` . By de
 
 ```{r}
 #| echo: true
-my_df <- tibble(animal = c('snake', 'gecko'),
-                threatening = c(TRUE, FALSE))
+# make sure columns are numeric
 
-my_df
 ```
 
 ```{r}
+#| echo: true
+# Plots with fitted line
 
 ```
 
@@ -84,7 +242,6 @@ Code chunks will be executed in order when the document is rendered, so packages
 Several functions exist for converting dataframes to markdown tables for nice display. A simple one from the `knitr` package is `knitr::kable()` .
 
 ```{r}
-my_df %>% knitr::kable()
 ```
 
 ### Figures
@@ -99,9 +256,7 @@ Most of the time code chunks producing plots will render fine. However, to adjus
 #| fig-align: left
 #| fig-cap: A terrible plot.
 
-my_df %>% 
-  ggplot(aes(x = animal, y = threatening)) + 
-  geom_col()
+
 ```
 
 ### Links

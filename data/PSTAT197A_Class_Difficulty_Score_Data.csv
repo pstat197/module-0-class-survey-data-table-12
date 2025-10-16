@@ -1,0 +1,8 @@
+Course Names,Data Science Concepts and Analysis,Bayesian Data Analysis,Probability and Statistics,Design and Analysis of Experiments,Linear Regression,Statistical Machine Learning,Stochastic Processes,Time Series,Intermediate Python,Problem Solving with Computers 1,Statistical Methods in Linguistics,Foundations of Computational Linguistics,Advanced Computational Linguistics: Text Processing,Data Structures & Algorithms,Artificial Intelligence,Data Wrangling for Economics,Advanced Statistical Models,Statistical Data Science,Intro to Data Science
+Name,PSTAT100,PSTAT115,PSTAT120,PSTAT122,PSTAT126,PSTAT131,PSTAT160,PSTAT174,CS9,CS16,LING104,LING110,LING111,CS130,CS165,ECON145,PSTAT127,PSTAT134,CS5
+Ben,2,2,2,2,3,2,2,3,1,2,1,2,3,3,3,2,3,2,1
+Jasper,2,3,2,2,2,3,2,3,2,2,2,2,3,3,3,2,3,3,1
+Jimmy,2,2,2,3,3,3,3,3,2,2,2,2,3,3,3,2,3,3,1
+Coraline,1,2,1,2,3,3,2,3,2,2,2,2,3,3,3,2,3,3,1
+Charles,1,2,1,2,2,2,3,3,1,2,2,2,3,2,2,3,3,2,1
+Final Score,1.6,2.2,1.6,2.2,2.6,2.6,2.4,3,1.6,2,1.8,2,3,2.8,2.8,2.2,3,2.6,1

@@ -1,0 +1,117 @@
+---
+title: "Data Interpretation"
+author: "Coraline Zhu"
+date: "2025-10-13"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r}
+library(readr)
+data <-read_csv("Desktop/PSTAT197A_ Standardized_Proficiency_Score.csv")
+# Basic summaries
+summary(data$Score_Avg)
+summary(data[, c("Math_Proficiency", "Prog_Proficiency", "Stat_Proficiency")])
+
+# Correlation matrix
+cor(data[, c("Score_Avg", "Math_Proficiency", "Prog_Proficiency", "Stat_Proficiency")])
+
+```
+```{r}
+library(ggplot2)
+
+# Math Proficiency
+ggplot(data, aes(x = Score_Avg, y = Math_Proficiency)) +
+  geom_point() +
+  geom_smooth(method = "lm", color = "blue") +
+  labs(title = "Math Proficiency vs Score_Avg",
+       x = "Average Course Difficulty",
+       y = "Math Proficiency") +
+  theme_minimal()
+
+# Programming Proficiency
+ggplot(data, aes(x = Score_Avg, y = Prog_Proficiency)) +
+  geom_point() +
+  geom_smooth(method = "lm", color = "blue") +
+  labs(title = "Programming Proficiency vs Score_Avg",
+       x = "Average Course Difficulty",
+       y = "Programming Proficiency") +
+  theme_minimal()
+
+# Statistics Proficiency
+ggplot(data, aes(x = Score_Avg, y = Stat_Proficiency)) +
+  geom_point() +
+  geom_smooth(method = "lm", color = "blue") +
+  labs(title = "Statistics Proficiency vs Score_Avg",
+       x = "Average Course Difficulty",
+       y = "Statistics Proficiency") +
+  theme_minimal()
+
+```
+
+```{r}
+# Build regression models
+model_math <- lm(Math_Proficiency ~ Score_Avg, data = data)
+model_prog <- lm(Prog_Proficiency ~ Score_Avg, data = data)
+model_stat <- lm(Stat_Proficiency ~ Score_Avg, data = data)
+
+# Extract R²
+r2_values <- data.frame(
+  Skill = c("Math", "Programming", "Statistics"),
+  R2 = c(summary(model_math)$r.squared,
+         summary(model_prog)$r.squared,
+         summary(model_stat)$r.squared)
+)
+
+# Bar chart
+ggplot(r2_values, aes(x = Skill, y = R2)) +
+  geom_col(fill = "steelblue") +
+  geom_text(aes(label = round(R2, 2)), vjust = -0.5) +
+  labs(title = "R²: How Much Score_Avg Explains Each Skill",
+       x = NULL, y = "R² Value") +
+  ylim(0, 1) +
+  theme_minimal()
+
+```
+
+```{r}
+# Load required libraries
+library(ggplot2)
+library(broom)
+library(dplyr)
+
+# Build models
+model_math <- lm(Math_Proficiency ~ Score_Avg, data = data)
+model_prog <- lm(Prog_Proficiency ~ Score_Avg, data = data)
+model_stat <- lm(Stat_Proficiency ~ Score_Avg, data = data)
+
+# Extract coefficients and standard errors
+coef_data <- tibble(
+  Skill = c("Math", "Programming", "Statistics"),
+  Coef = c(coef(model_math)[2], coef(model_prog)[2], coef(model_stat)[2]),
+  SE = c(tidy(model_math)$std.error[2],
+         tidy(model_prog)$std.error[2],
+         tidy(model_stat)$std.error[2])
+)
+
+# Plot with error bars
+ggplot(coef_data, aes(x = Skill, y = Coef)) +
+  geom_col(fill = "darkorange") +
+  geom_errorbar(aes(ymin = Coef - 1.96 * SE, ymax = Coef + 1.96 * SE), width = 0.2) +
+  labs(
+    title = "Effect of Score_Avg on Each Skill (with 95% CI)",
+    y = "Regression Coefficient (Slope)",
+    x = NULL
+  ) +
+  theme_minimal()
+
+
+```
+```{r}
+# Check residuals for statistics model
+par(mfrow = c(2,2))
+plot(model_stat)
+
+```
+

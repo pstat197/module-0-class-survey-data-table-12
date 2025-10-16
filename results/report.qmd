@@ -166,6 +166,8 @@ Programming (Computing) proficiency and Mathematics proficiency shows a minimal 
 
 Statistics proficiency shows a very strong positive correlation with the average score. Namely, students who took more or harder statistics courses tend to report higher confidence and proficiency in statistics skills. This aligns with the realistic expectation that the more statistics courses a student took the more confident the student should be in a statistics program.
 
+We then proceed to examine the R-squared values for each model.
+
 ```{r}
 # Build regression models
 model_math <- lm(Math_Proficiency ~ Score_Avg, data = df)
@@ -189,6 +191,12 @@ ggplot(r2_values, aes(x = Skill, y = R2)) +
   ylim(0, 1) +
   theme_minimal()
 ```
+
+The R-squared values further demonstrated our preliminary conclusion. Specifically, the average score value explains 0% of students' proficiency in mathematics, aligning with our assumption that the slight positive trend in average score and mathematics proficiency is likely statistic-driven.
+
+However, the average score value does have relationships with students' programming and statistics proficiency. It explains 3% of students' programming proficiency and 16% of students' statistics proficiency, remain consistent with our previous corresponding findings.
+
+We are also interested in how each skill affects the average score value, which is, namely, the regression coefficients of the models. We proceed to examine these coefficients with 95% confidence.
 
 ```{r}
 model_math <- lm(Math_Proficiency ~ Score_Avg, data = df)
@@ -215,12 +223,33 @@ ggplot(coef_data, aes(x = Skill, y = Coef)) +
   ) +
   theme_minimal()
 
+```
+
+Some insightful conclusion can be derived for each coefficients. Student's mathematics proficiency appears to have a weak positive relationship with the average score value. However, since the 95% confidence interval crosses 0, the relationship between this coefficient and the response variable is weak and possibly not statistically significant. We cannot say with confidence that mathematics proficiency affects students' average score.
+
+Students' programming proficiency shows a moderately positive relationship with the average score value. This implies that students with higher programming proficiency might have higher average score value. However, again, since the 95% confidence interval crosses 0, the effect is not statistically significant at the 95% confidence level.
+
+Lastly, students' statistics proficiency presents a strong positive relationship with the average score value. Namely, students with high statistics proficiency tend to have higher average score value. Since the confidence interval does not crosses 0, this result is statistically significant at the 95% confidence level.
+
+To further validate the statistical foundation of these results, we now check the linear models' assumptions.
+
+```{r}
 # Check residuals for statistics model
 par(mfrow = c(2,2))
 plot(model_stat)
 ```
 
-Overall, students with stronger coursework backgrounds—especially in statistics—felt more capable and confident in their technical skills. This suggests that prior coursework preparation does contribute to perceived proficiency, though the strength of association varies by domain.
+According to the residuals vs fitted value plot, the smooth line is roughly fat, but there's a slight curve and varying spread across fitted values. This suggest minor possibilities of non-linearity and unequal variance. Thus, the linearity and constant variance should be mostly fine by might be slightly violated.
+
+The scale-location plot better help us with examining the heteroscedasticity assumption. From the plot, the red line is mostly flat but with slight dips. The variance looks somehow uneven, suggesting that our constant variance assumption is likely violated.
+
+The points in the normal Q-Q plot follows the diagonal line, with very minor deviation at both tails. Although minor deviation from normality could exist, the entirety of the plot presents more evidence that suggest that the residuals of the model are normally distributed.
+
+The residuals vs leverage plot further examine if, in general, the model have influence problem. Since most points has low leverage and only one point around the leverage value of 0.15 is near the cook's distance boundary (\~0.5), the model does not have any severe influence problems and therefore the model is fairly stable.
+
+The diagnostic plots suggest the linear regression assumptions are *mostly reasonable*, though there is some mild non-linearity and potential heteroscedasticity. No major violations or influential outliers are apparent, so the model is acceptable but could be improved (for example, by transforming variables or adding polynomial terms).
+
+Overall, students with stronger coursework backgrounds, especially in statistics, felt more capable and confident in their technical skills related to the Capstone program. This suggests that prior coursework preparation does contribute to perceived proficiency, though the strength of association varies by domain.
 
 ### Code chunks
 

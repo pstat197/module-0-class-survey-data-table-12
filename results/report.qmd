@@ -29,11 +29,15 @@ library(knitr)
 
 ## Executive summary
 
-Write a one-paragraph abstract summarizing what you did and your findings. It need not be comprehensive; try to highlight the most important or interesting outcomes.
+In this report, we aim to assess a student's proficiency and specialization based on intake data for the 2025 UCSB PSTAT Capstone. This admission data includes prior coursework, domains of interest, and self-reported comfort levels in the following areas: Statistics, Programming, and Mathematics. We use this information in our report to create a scoring system for analysis. Our analysis reveals that comfort in these three areas has a positive correlation with proficiency, based on prior coursework/experience. 
 
 ## Data description
 
-Write a brief description of the dataset. Your description should cover how data were obtained, sample characteristics, and measurements taken. It does not need to be exhaustive, but sufficiently detailed to convey a clear high-level understanding of the dataset. You can utilize bullet points or tables if you feel it would help improve clarity.
+Our data was obtained from the 2025 UCSB PSTAT Capstone admission/intake form. Within this form, students reported their self-reported comfort levels in statistics, programming, and mathematics. Students also reported the prior coursework they have taken in such areas and domain interests. 
+
+Based on this information, we (the people working on this report) scored course difficulty from an integer scale of one to three. One represents beginner level, two represents intermediate level, and three represents advanced level. To be inclusive of a student's self-reported comfort level, we also assigned the scores of one, one and a half, and two to respective comfort levels. 
+
+Using this scoring system, we calculated each student's proficiency by averaging the difficulty scores of their completed courses and multiplying by their comfort level score. This composite score ranges from one to ten, enabling a normalized analysis of estimated proficiency.
 
 ## Questions of interest
 

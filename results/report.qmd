@@ -4,6 +4,8 @@ subtitle: "If you want a subtitle put it here"
 author: 
   - Jasper Luo
   - Jimmy Wu
+  - Ben Hurt
+  - Charles Yang
 date: last-modified
 published-title: "Updated"
 editor: visual

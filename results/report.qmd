@@ -6,6 +6,7 @@ author:
   - Jimmy Wu
   - Ben Hurt
   - Charles Yang
+  - Daixi Zhu
 date: last-modified
 published-title: "Updated"
 editor: visual
@@ -18,8 +19,6 @@ execute:
   cache: true
 ---
 
-Use this as a template. Keep the headers and remove all other text. Overall, your report may be quite short. When it is complete, render and then push changes to your team repository.
-
 ```{r}
 library(tidyverse)
 library(readr)
@@ -31,13 +30,13 @@ library(knitr)
 
 ## Executive summary
 
-In this report, we aim to assess a student's proficiency and specialization based on intake data for the 2025 UCSB PSTAT Capstone. This admission data includes prior coursework, domains of interest, and self-reported comfort levels in the following areas: Statistics, Programming, and Mathematics. We use this information in our report to create a scoring system for analysis. Our analysis reveals that comfort in these three areas has a positive correlation with proficiency, based on prior coursework/experience. 
+In this report, we aim to assess a student's proficiency and specialization based on intake data for the 2025 UCSB PSTAT Capstone. This admission data includes prior coursework, domains of interest, and self-reported comfort levels in the following areas: Statistics, Programming, and Mathematics. We use this information in our report to create a scoring system for analysis. Our analysis reveals that comfort in these three areas has a positive correlation with proficiency, based on prior coursework/experience.
 
 ## Data description
 
-Our data was obtained from the 2025 UCSB PSTAT Capstone admission/intake form. Within this form, students reported their self-reported comfort levels in statistics, programming, and mathematics. Students also reported the prior coursework they have taken in such areas and domain interests. 
+Our data was obtained from the 2025 UCSB PSTAT Capstone admission/intake form. Within this form, students reported their self-reported comfort levels in statistics, programming, and mathematics. Students also reported the prior coursework they have taken in such areas and domain interests.
 
-Based on this information, we (the people working on this report) scored course difficulty from an integer scale of one to three. One represents beginner level, two represents intermediate level, and three represents advanced level. To be inclusive of a student's self-reported comfort level, we also assigned the scores of one, one and a half, and two to respective comfort levels. 
+Based on this information, we (the people working on this report) scored course difficulty from an integer scale of one to three. One represents beginner level, two represents intermediate level, and three represents advanced level. To be inclusive of a student's self-reported comfort level, we also assigned the scores of one, one and a half, and two to respective comfort levels.
 
 Using this scoring system, we calculated each student's proficiency by averaging the difficulty scores of their completed courses and multiplying by their comfort level score. This composite score ranges from one to ten, enabling a normalized analysis of estimated proficiency.
 
@@ -259,44 +258,152 @@ Overall, students with stronger coursework backgrounds, especially in statistics
 
 ### Code chunks
 
-Insert code chunks using the *Insert* drop-down menu or `ctrl + alt + I` . By default in this document, codes will not be shown but results will. If you want to change this behavior, add the chunk option `echo: true` as below.
+```{r,echo=TRUE}
+library(tidyverse)
+library(readr)
+library(ggplot2)
+library(broom)
+library(dplyr)
+library(knitr)
+```
 
-```{r}
-#| echo: true
-# make sure columns are numeric
+```{r,echo=TRUE,results = 'hide',fig.show='hide',warning=FALSE}
+# setwd will work only at the working environment of the person who wrote this
+setwd("D:/UCSB/Class/F25/PSTAT197A/module-0-class-survey-data-table-12/data")
+csv_path <- "PSTAT197A_ Standardized_Proficiency_Score.csv"
+df <- read_csv(csv_path, show_col_types = FALSE)
+
+# Basic summaries
+summary(df$Score_Avg)
+
+summary(df[, c("Math_Proficiency", "Prog_Proficiency", "Stat_Proficiency")]) 
 
 ```
 
-```{r}
-#| echo: true
-# Plots with fitted line
+```{r,echo=TRUE,results = 'hide',fig.show='hide'}
+df <- df %>%
+  mutate(
+    Score_Avg        = as.numeric(Score_Avg),
+    Prog_Proficiency = as.numeric(Prog_Proficiency),
+    Stat_Proficiency = as.numeric(Stat_Proficiency),
+    Math_Proficiency = as.numeric(Math_Proficiency)
+  ) 
 
+# define pairs and fit models
+pairs <- tribble(
+  ~y,                  ~x,
+  "Prog_Proficiency",  "Score_Avg",
+  "Stat_Proficiency",  "Score_Avg",
+  "Math_Proficiency",  "Score_Avg"
+)
+
+fit_1 <- function(y, x, data) {
+  sub <- data %>% select(all_of(c(y, x))) %>% drop_na()
+  m   <- lm(reformulate(x, y), data = sub)
+  list(
+    glance = glance(m) %>% mutate(y = y, x = x, n = nobs(m)),
+    tidy   = tidy(m)   %>% mutate(y = y, x = x),
+    model  = m,
+    data   = sub
+  )
+}
+
+fits <- pairs %>%
+  pmap(fit_1, data = df)
 ```
 
-Code chunks will be executed in order when the document is rendered, so packages should be loaded at the very beginning of the document
+```{r,echo=TRUE,results = 'hide',fig.show='hide'}
+plot_one <- function(y, x, data) {
+  rngx <- range(data[[x]], na.rm = TRUE) + c(-0.05, 0.05)
+  rngy <- range(data[[y]], na.rm = TRUE) + c(-0.5, 0.5)
+  
+  ggplot(data, aes(x = .data[[x]], y = .data[[y]])) +
+    geom_point(
+      alpha = 0.7,
+      size = 2,
+      color = "#2C7FB8",
+      position = position_jitter(width = 0.01, height = 0.01)
+    ) +
+    geom_smooth(
+      method = "lm",
+      se = TRUE,
+      color = "#D95F0E",
+      fill = "#FEE0B6" 
+    ) +
+    coord_cartesian(xlim = rngx, ylim = rngy) +
+    labs(
+      title = paste(y, "vs", x),
+      x = x,
+      y = y
+    ) +
+    theme_minimal(base_size = 12) +
+    theme(
+      plot.title = element_text(face = "bold", hjust = 0.5),
+      panel.grid.minor = element_blank(),
+      panel.grid.major = element_line(color = "grey90")
+    )
+}
 
-### Rendering tables in markdown
+plots <- pmap(
+  pairs,
+  \(y, x) plot_one(y, x, df %>% select(all_of(c(y, x))) %>% drop_na())
+)
 
-Several functions exist for converting dataframes to markdown tables for nice display. A simple one from the `knitr` package is `knitr::kable()` .
-
-```{r}
+plots[[1]]
+plots[[3]]
+plots[[2]]
 ```
 
-### Figures
+```{r,echo=TRUE,results = 'hide',fig.show='hide'}
+# Build regression models
+model_math <- lm(Math_Proficiency ~ Score_Avg, data = df)
+model_prog <- lm(Prog_Proficiency ~ Score_Avg, data = df)
+model_stat <- lm(Stat_Proficiency ~ Score_Avg, data = df)
 
-To include any figures not generated by code chunks, use *Insert \> Figure / Image* or `![CAPTION](path/file.ext)` .
+# Extract R²
+r2_values <- data.frame(
+  Skill = c("Math", "Programming", "Statistics"),
+  R2 = c(summary(model_math)$r.squared,
+         summary(model_prog)$r.squared,
+         summary(model_stat)$r.squared)
+)
 
-Most of the time code chunks producing plots will render fine. However, to adjust sizing or alignment, use the chunk options `fig-width` and `fig-height` . Captions can be added with `fig-cap` .
-
-```{r}
-#| fig-width: 4
-#| fig-height: 3
-#| fig-align: left
-#| fig-cap: A terrible plot.
-
-
+# Bar chart
+ggplot(r2_values, aes(x = Skill, y = R2)) +
+  geom_col(fill = "steelblue") +
+  geom_text(aes(label = round(R2, 2)), vjust = -0.5) +
+  labs(title = "R²: How Much Score_Avg Explains Each Skill",
+       x = NULL, y = "R² Value") +
+  ylim(0, 1) +
+  theme_minimal()
 ```
 
-### Links
+```{r,echo=TRUE,results = 'hide',fig.show='hide'}
+model_math <- lm(Math_Proficiency ~ Score_Avg, data = df)
+model_prog <- lm(Prog_Proficiency ~ Score_Avg, data = df)
+model_stat <- lm(Stat_Proficiency ~ Score_Avg, data = df)
 
-To include any hyperlinks, use `[display text](url)` .
+# Extract coefficients and standard errors
+coef_data <- tibble(
+  Skill = c("Math", "Programming", "Statistics"),
+  Coef = c(coef(model_math)[2], coef(model_prog)[2], coef(model_stat)[2]),
+  SE = c(tidy(model_math)$std.error[2],
+         tidy(model_prog)$std.error[2],
+         tidy(model_stat)$std.error[2])
+)
+
+# Plot with error bars
+ggplot(coef_data, aes(x = Skill, y = Coef)) +
+  geom_col(fill = "darkorange") +
+  geom_errorbar(aes(ymin = Coef - 1.96 * SE, ymax = Coef + 1.96 * SE), width = 0.2) +
+  labs(
+    title = "Effect of Score_Avg on Each Skill (with 95% CI)",
+    y = "Regression Coefficient (Slope)",
+    x = NULL
+  ) +
+  theme_minimal()
+
+# Check residuals for statistics model
+par(mfrow = c(2,2))
+plot(model_stat)
+```
